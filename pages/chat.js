@@ -1,25 +1,48 @@
 import { Box, Text, TextField, Image, Button } from "@skynexui/components";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import appConfig from "../config.json";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
+import { createClient } from "@supabase/supabase-js";
 
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzI4NjgxMywiZXhwIjoxOTU4ODYyODEzfQ.9W2nlI_UyC73Pt2E8IsG57p3tt-1__fhG7-2ouV0QrU'
+const SUPABASE_URL = 'https://ounexqxxgcctkvcglodp.supabase.co'
+const supabaseClient = createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
 
 export default function ChatPage() {
+  
   // Sua lógica vai aqui
   const [message, setMessage] = useState("");
   const [messageArr, setMessageArr] = useState([]);
   // ./Sua lógica vai aqui
 
+  
+  useEffect(() => {
+    supabaseClient
+      .from('messages')
+      .select('*')
+      .order('id', {ascending: false})
+      .then((dados) => {
+        setMessageArr(dados.data)
+      })
+  }, [])
+
+
   const handleNewMessage = (newMessage) => {
     const message = {
-      id: messageArr.length + 1,
-      user: "Dan",
-      text: newMessage,
-      deleted: false
+     // id: messageArr.length + 1,
+      de: "Danny-codes",
+      texto: newMessage,
     };
-    setMessageArr([ message, ...messageArr]);
-    setMessage("");
+
+    supabaseClient
+      .from('messages')
+      .insert([message])
+      .then(({data}) => {
+        setMessageArr([ data, ...messageArr]);
+      })
+      setMessage("");
+
 
     console.log(message)
   };
@@ -190,6 +213,7 @@ function MessageList(props) {
       }}
     >
       {props.messageArr.map((newMessage) => {
+        console.log(newMessage)
         return (
           <Text
             key={newMessage.id}
@@ -220,9 +244,9 @@ function MessageList(props) {
                   display: "inline-block",
                   marginRight: "8px",
                 }}
-                src={`https://github.com/vanessametonini.png`}
+                src={`https://github.com/${newMessage.de}.png`}
               />
-              <Text tag="strong">{newMessage.user}</Text>
+              <Text tag="strong">{newMessage.de}</Text>
               <Text
                 styleSheet={{
                   fontSize: "10px",
@@ -253,7 +277,7 @@ function MessageList(props) {
           }
         />
             </Box>
-            {newMessage.text}
+            {newMessage.texto}
           </Text>
         );
       })}

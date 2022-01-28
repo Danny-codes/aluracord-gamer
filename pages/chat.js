@@ -1,50 +1,57 @@
 import { Box, Text, TextField, Image, Button } from "@skynexui/components";
 import { useState, useEffect } from "react";
 import appConfig from "../config.json";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTimesCircle } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { createClient } from "@supabase/supabase-js";
 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzI4NjgxMywiZXhwIjoxOTU4ODYyODEzfQ.9W2nlI_UyC73Pt2E8IsG57p3tt-1__fhG7-2ouV0QrU'
-const SUPABASE_URL = 'https://ounexqxxgcctkvcglodp.supabase.co'
-const supabaseClient = createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzI4NjgxMywiZXhwIjoxOTU4ODYyODEzfQ.9W2nlI_UyC73Pt2E8IsG57p3tt-1__fhG7-2ouV0QrU";
+const SUPABASE_URL = "https://ounexqxxgcctkvcglodp.supabase.co";
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export default function ChatPage() {
-  
   // Sua lógica vai aqui
   const [message, setMessage] = useState("");
   const [messageArr, setMessageArr] = useState([]);
   // ./Sua lógica vai aqui
+  const handleDeleteMessage = (message) => {
+    supabaseClient
+    .from("messages")
+    .update({deleted: true})
+    .eq('id', message.id)
+    .then((dados) => {
+      setMessageArr([...messageArr]);
+      console.log(messageArr)
+    })
+  };
 
-  
   useEffect(() => {
     supabaseClient
-      .from('messages')
-      .select('*')
-      .order('id', {ascending: false})
+      .from("messages")
+      .select("*")
+      .order("id", { ascending: false })
       .then((dados) => {
-        setMessageArr(dados.data)
-      })
-  }, [])
-
+        setMessageArr(dados.data);
+      });
+  }, [handleDeleteMessage]);
 
   const handleNewMessage = (newMessage) => {
     const message = {
-     // id: messageArr.length + 1,
+      // id: messageArr.length + 1,
       de: "Danny-codes",
       texto: newMessage,
     };
 
+
     supabaseClient
-      .from('messages')
+      .from("messages")
       .insert([message])
-      .then(({data}) => {
-        setMessageArr([ data, ...messageArr]);
-      })
-      setMessage("");
-
-
-    console.log(message)
+      .then(({ data }) => {
+        console.log('criando')
+        setMessageArr([data[0], ...messageArr]);
+      });
+    setMessage("");
   };
 
 
@@ -54,7 +61,7 @@ export default function ChatPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: '#9b2226',
+        backgroundColor: "#9b2226",
         backgroundImage: `url(https://virtualbackgrounds.site/wp-content/uploads/2020/12/bright-gaming-room-setup.jpg)`,
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
@@ -69,7 +76,7 @@ export default function ChatPage() {
           flex: 1,
           boxShadow: "0 2px 10px 0 rgb(0 0 0 / 20%)",
           borderRadius: "5px",
-          backgroundColor: '#a0001c',
+          backgroundColor: "#a0001c",
           height: "100%",
           maxWidth: "75%",
           maxHeight: "90vh",
@@ -79,17 +86,17 @@ export default function ChatPage() {
         <Header />
         <Box
           styleSheet={{
-            position: 'relative',
-            display: 'flex',
+            position: "relative",
+            display: "flex",
             flex: 1,
-            height: '80%',
+            height: "80%",
             backgroundColor: appConfig.theme.colors.neutrals[600],
-            flexDirection: 'column',
-            borderRadius: '5px',
-            padding: '16px',
+            flexDirection: "column",
+            borderRadius: "5px",
+            padding: "16px",
           }}
         >
-          <MessageList messageArr={messageArr} message={message} />
+          <MessageList messageArr={messageArr} setMessageArr={setMessageArr} message={message} handleDeleteMessage={handleDeleteMessage}/>
 
           {/* <MessageList mensagens={[]} /> */}
           {/*} {messageArr.map((newMessage) => {
@@ -123,7 +130,7 @@ export default function ChatPage() {
               placeholder="Insira sua mensagem aqui..."
               type="textarea"
               styleSheet={{
-                width: '90%',
+                width: "90%",
                 border: "0",
                 resize: "none",
                 borderRadius: "5px",
@@ -134,25 +141,24 @@ export default function ChatPage() {
               }}
             />
             <Button
-          variant="tertiary"
-          colorVariant="neutral"
-          label="Send"
-          styleSheet={{
-              backgroundColor:'#370617',
-              width: '10%',
-              height: '80%',
-              marginBottom: '8px',
-              border: "0",
-              resize: "none",
-              borderRadius: "5px",
-              color: appConfig.theme.colors.neutrals[200],
-          }}
-          onClick={(event) => {
-            handleNewMessage(message)
-            event.preventDefault()
-          }
-          }
-        />
+              variant="tertiary"
+              colorVariant="neutral"
+              label="Send"
+              styleSheet={{
+                backgroundColor: "#370617",
+                width: "10%",
+                height: "80%",
+                marginBottom: "8px",
+                border: "0",
+                resize: "none",
+                borderRadius: "5px",
+                color: appConfig.theme.colors.neutrals[200],
+              }}
+              onClick={(event) => {
+                handleNewMessage(message);
+                event.preventDefault();
+              }}
+            />
           </Box>
         </Box>
       </Box>
@@ -179,8 +185,8 @@ function Header() {
           label="Logout"
           href="/"
           styleSheet={{
-              backgroundColor:'#370617',
-              color: appConfig.theme.colors.neutrals[200],
+            backgroundColor: "#370617",
+            color: appConfig.theme.colors.neutrals[200],
           }}
         />
       </Box>
@@ -190,15 +196,10 @@ function Header() {
 
 function MessageList(props) {
 
-  const handleDeleteMessage = (props) => {
-    const deletedmessage = {
-      id: props.message.id,
-      user: props.message.user,
-      text: props.message.text,
-      deleted: true
-    }
-    console.log(deletedmessage)
-  }
+
+  const filtered = props.messageArr.filter(message => {
+    return message.deleted === false
+  })
 
   return (
     <Box
@@ -212,8 +213,8 @@ function MessageList(props) {
         marginBottom: "16px",
       }}
     >
-      {props.messageArr.map((newMessage) => {
-        console.log(newMessage)
+      
+      {filtered.map((newMessage) => {
         return (
           <Text
             key={newMessage.id}
@@ -223,7 +224,7 @@ function MessageList(props) {
               padding: "6px",
               marginBottom: "12px",
               hover: {
-                backgroundColor: '#370617',
+                backgroundColor: "#370617",
               },
             }}
           >
@@ -235,47 +236,46 @@ function MessageList(props) {
                 justifyContent: "space-between",
               }}
             >
-            <div> 
-              <Image
-                styleSheet={{
-                  width: "20px",
-                  height: "20px",
-                  borderRadius: "50%",
-                  display: "inline-block",
-                  marginRight: "8px",
-                }}
-                src={`https://github.com/${newMessage.de}.png`}
-              />
-              <Text tag="strong">{newMessage.de}</Text>
-              <Text
-                styleSheet={{
-                  fontSize: "10px",
-                  marginLeft: "8px",
-                  color: appConfig.theme.colors.neutrals[300],
-                }}
-                tag="span"
-              >
-                {new Date().toLocaleDateString()}
-              </Text>
+              <div>
+                <Image
+                  styleSheet={{
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "50%",
+                    display: "inline-block",
+                    marginRight: "8px",
+                  }}
+                  src={`https://github.com/${newMessage.de}.png`}
+                />
+                <Text tag="strong">{newMessage.de}</Text>
+                <Text
+                  styleSheet={{
+                    fontSize: "10px",
+                    marginLeft: "8px",
+                    color: appConfig.theme.colors.neutrals[300],
+                  }}
+                  tag="span"
+                >
+                  {new Date().toLocaleDateString()}
+                </Text>
               </div>
               <Button
                 variant="tertiary"
                 id="close-button"
                 colorVariant="neutral"
                 label={<FontAwesomeIcon icon={faTimesCircle} />}
-                styleSheet={{                  
-                    marginBottom: '8px',
-                    border: "0",
-                    resize: "none",
-                    textAlign: 'left',
-                    borderRadius: "5px",
-                    color: appConfig.theme.colors.neutrals[200],
+                styleSheet={{
+                  marginBottom: "8px",
+                  border: "0",
+                  resize: "none",
+                  textAlign: "left",
+                  borderRadius: "5px",
+                  color: appConfig.theme.colors.neutrals[200],
                 }}
-                onClick={(message) => {
-                  handleDeleteMessage(message)
-          }
-          }
-        />
+                onClick={() => {
+                  props.handleDeleteMessage(newMessage);
+                }}
+              />
             </Box>
             {newMessage.texto}
           </Text>

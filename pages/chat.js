@@ -4,13 +4,26 @@ import appConfig from "../config.json";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/router";
+import { ButtonSendSticker } from "../src/components/sendStickers";
 
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzI4NjgxMywiZXhwIjoxOTU4ODYyODEzfQ.9W2nlI_UyC73Pt2E8IsG57p3tt-1__fhG7-2ouV0QrU";
 const SUPABASE_URL = "https://ounexqxxgcctkvcglodp.supabase.co";
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+function listenMessages(addMessage){
+  return supabaseClient.from("messages")
+  .on('INSERT', ({respostaLive}) => {
+    addMessage(respostaLive.new)
+  })
+  .subscribe();
+}
+
 export default function ChatPage() {
+  const roteamento = useRouter();
+  const usuarioLogado = roteamento.query.username;
+
   // Sua lógica vai aqui
   const [message, setMessage] = useState("");
   const [messageArr, setMessageArr] = useState([]);
@@ -26,6 +39,8 @@ export default function ChatPage() {
     })
   };
 
+  
+
   useEffect(() => {
     supabaseClient
       .from("messages")
@@ -34,12 +49,24 @@ export default function ChatPage() {
       .then((dados) => {
         setMessageArr(dados.data);
       });
+      const subscription = listenMessages((newMessage) => {
+        setMessageArr((currentValue) => {
+          return [
+            newMessage, ...currentValue
+          ]
+        })
+      
+      })
+
+      return() => {
+        subscription.unsubscribe();
+      }
   }, [handleDeleteMessage]);
 
   const handleNewMessage = (newMessage) => {
     const message = {
       // id: messageArr.length + 1,
-      de: "Danny-codes",
+      de: usuarioLogado,
       texto: newMessage,
     };
 
@@ -140,6 +167,12 @@ export default function ChatPage() {
                 color: appConfig.theme.colors.neutrals[200],
               }}
             />
+            <ButtonSendSticker 
+              onStickerClick={(sticker) => {
+                console.log(sticker)
+                handleNewMessage(`:sticker: ${sticker}`)
+              }}
+            />
             <Button
               variant="tertiary"
               colorVariant="neutral"
@@ -149,10 +182,12 @@ export default function ChatPage() {
                 width: "10%",
                 height: "80%",
                 marginBottom: "8px",
+                margin: '10px',
                 border: "0",
                 resize: "none",
                 borderRadius: "5px",
                 color: appConfig.theme.colors.neutrals[200],
+                borderRadius: '50px;',
               }}
               onClick={(event) => {
                 handleNewMessage(message);
@@ -258,6 +293,7 @@ function MessageList(props) {
                 >
                   {new Date().toLocaleDateString()}
                 </Text>
+
               </div>
               <Button
                 variant="tertiary"
@@ -277,7 +313,13 @@ function MessageList(props) {
                 }}
               />
             </Box>
-            {newMessage.texto}
+
+            {newMessage.texto.startsWith(':sticker:') 
+            ? (
+                <Image src={newMessage.texto.replace(':sticker:', '')}/>
+              ) : (
+                newMessage.texto
+              )}
           </Text>
         );
       })}
